@@ -11,7 +11,6 @@ import androidx.activity.viewModels
 import androidx.lifecycle.Observer
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import com.example.recetasapp.ui.DetailActivity
 import com.example.recetasapp.ui.adapter.OnItemClickListener
 // IMPORTA TUS CLASES
 import com.example.recetasapp.ui.adapter.RecipeAdapter

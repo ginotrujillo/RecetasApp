@@ -1,5 +1,5 @@
 package com.example.recetasapp.ui.adapter
-
+import android.content.Intent
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -10,6 +10,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
 import com.example.recetasapp.R // <-- IMPORTANTE: Importa el R de tu app
 import com.example.recetasapp.data.model.Meal // <-- IMPORTANTE: Importa tu modelo 'Meal'
+import com.example.recetasapp.DetailActivity
 
 
 // Esta será la interfaz "mensajera"
@@ -44,8 +45,15 @@ class RecipeAdapter(private var recipes: List<Meal>, private val listener: OnIte
 // ¡AÑADE ESTO!
 // Cuando se haga clic en la fila (itemView)
         holder.itemView.setOnClickListener {
+            val context = holder.itemView.context
             val recipe = recipes[position]
-            listener.onItemClick(recipe.id) // Llama al mensajero con el ID de la receta
+            val intent = Intent(context, DetailActivity::class.java) // Asegúrate que el nombre de tu Activity sea correcto
+
+            // 2. Adjunta el ID de la receta como un "extra"
+            intent.putExtra("RECIPE_ID", recipe.id) // "RECIPE_ID" es una clave que inventamos
+
+            // 3. Inicia la nueva Activity
+            context.startActivity(intent)
         }
     }
 
