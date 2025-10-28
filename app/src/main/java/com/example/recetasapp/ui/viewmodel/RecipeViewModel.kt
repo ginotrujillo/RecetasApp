@@ -4,51 +4,64 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.recetasapp.data.model.Meal // <-- IMPORTA TU MODELO
-import com.example.recetasapp.data.network.RetrofitClient // <-- IMPORTA TU CLIENTE
+import com.example.recetasapp.data.model.Meal
+import com.example.recetasapp.data.network.RetrofitClient
+// IMPORTA LAS LIBRERÍAS DE FIREBASE
+import com.google.firebase.ktx.Firebase
+import com.google.firebase.firestore.ktx.firestore
 import kotlinx.coroutines.launch
 import java.lang.Exception
 
 class RecipeViewModel : ViewModel() {
 
-    // --- LiveData para la Lista de Recetas ---
-
-    // 1. PRIVADO y Mutable: Solo el ViewModel puede cambiar esta lista.
     private val _recipes = MutableLiveData<List<Meal>>()
-
-    // 2. PÚBLICO e Inmutable: La Activity solo puede LEER los datos de aquí.
     val recipes: LiveData<List<Meal>> = _recipes
 
-    // --- LiveData para el Estado de Carga (ProgressBar) ---
     private val _isLoading = MutableLiveData<Boolean>()
     val isLoading: LiveData<Boolean> = _isLoading
 
-    /**
-     * Función principal para buscar recetas.
-     * Usa Coroutines (viewModelScope) para llamar a la API en un hilo secundario.
-     */
+    // --- AÑADE ESTO ---
+    // Obtenemos una instancia de la base de datos de Firestore
+    private val db = Firebase.firestore
+    // --- FIN DE AÑADIR ---
+
     fun searchRecipes(query: String) {
 
-        // 1. Mostrar el ProgressBar
-        _isLoading.value = true
+        // --- AÑADE ESTA LÍNEA ---
+        // Primero, guardamos la búsqueda
+        saveSearchQuery(query)
+        // --- FIN DE AÑADIR ---
 
+        _isLoading.value = true
         viewModelScope.launch {
             try {
-                // 2. Llamar a la API (usando el cliente de Retrofit del Paso 3)
                 val response = RetrofitClient.instance.searchRecipes(query)
-
-                // 3. Actualizar el LiveData con los resultados
-                // (Usamos ?: emptyList() por si la búsqueda no devuelve nada, la API devuelve 'null')
                 _recipes.value = response.meals ?: emptyList()
-
             } catch (e: Exception) {
-                // 4. Si hay un error (ej. sin internet), mostrar una lista vacía
                 _recipes.value = emptyList()
-
             } finally {
-                // 5. Ocultar el ProgressBar (tanto si hubo éxito como si hubo error)
                 _isLoading.value = false
             }
         }
     }
+
+    // --- AÑADE ESTA NUEVA FUNCIÓN ---
+    /**
+     * Guarda el término de búsqueda en la colección "searches" de Firestore
+     */
+    private fun saveSearchQuery(query: String) {
+        // Crea un "documento" simple
+        val searchData = hashMapOf(
+            "term" to query.lowercase(), // Guardamos en minúsculas para un mejor análisis
+            "timestamp" to System.currentTimeMillis() // Guardamos la fecha
+        )
+
+        // Lo guarda en una "colección" (tabla) llamada "searches"
+        // Si no existe, Firestore la crea automáticamente
+        db.collection("searches")
+            .add(searchData)
+        // Opcional: puedes añadir .addOnSuccessListener y .addOnFailureListener
+        // para saber si se guardó correctamente, pero no es necesario.
+    }
+    // --- FIN DE AÑADIR ---
 }
